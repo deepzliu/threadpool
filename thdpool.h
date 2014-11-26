@@ -104,14 +104,15 @@ private:
 	void CreateThreads();
 	bool GetNewTask(TaskInfo &task_info);
 	void CheckIdleThread(const TaskInfo &task_info);
+	void DoTask(int index);
+	void DoTaskAllocate();
 
 public:
 	CThdPool();
 	~CThdPool();
 	int PoolInit(int pool_size, TaskConsumHandle handle = NULL);
 	int AddTask(void *pUser, TaskConsumHandle handle = NULL);
-	void DoTask(int index);
-	void DoTaskAllocate();
+	bool IsBusy();
 
 };
 

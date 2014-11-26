@@ -77,8 +77,8 @@ void CThdPool::DoTask(int index){
 		if(mThdInfo[index].fTaskHandle) 
 			mThdInfo[index].fTaskHandle(mThdInfo[index].pValue);
 		mThdInfo[index].idle_flag = 1;
-		mThdInfo[index].do_task_frequency++;
 #ifdef TPDEBUG
+		mThdInfo[index].do_task_frequency++;
 		printf("Thread %d finished work, fight time(s): %ld\n", index, mThdInfo[index].do_task_frequency);
 #endif
 	}
@@ -152,4 +152,8 @@ void CThdPool::DoTaskAllocate(){
 	}
 }
 
-
+bool CThdPool::IsBusy()
+{
+	if(mTaskList.size() > 0) return true;
+	else return false;
+}
