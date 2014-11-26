@@ -37,9 +37,12 @@ int CThdPool::PoolInit(int pool_size, TaskConsumHandle handle/* = NULL*/){
 	tThdInfo.fTaskHandle = NULL;
 	mThdInfo.assign(pool_size, tThdInfo);
 	mPoolSize = pool_size;
+	mBusy = false;
+	mRunningThds = 0;
 	
 	pthread_mutex_init(&mTaskListMutex, NULL);
 	pthread_mutex_init(&mThdInfoMutex, NULL);
+	pthread_mutex_init(&mRunningThdsMutex, NULL);
 
 	CreateThreads();
 }
@@ -70,7 +73,9 @@ void CThdPool::DoTask(int index){
 	printf("Thread %d is ready.\n", index);
 #endif
 	while(true){
+		//printf("Thread %d waiting\n", index);
 		sem_wait(&mThdInfo[index].sem);
+		RunningThdCount();
 #ifdef TPDEBUG
 		printf("Thread %d start work ...\n", index);
 #endif
@@ -81,6 +86,7 @@ void CThdPool::DoTask(int index){
 		mThdInfo[index].do_task_frequency++;
 		printf("Thread %d finished work, fight time(s): %ld\n", index, mThdInfo[index].do_task_frequency);
 #endif
+		RunningThdRemove();
 	}
 }
 
@@ -91,6 +97,7 @@ int CThdPool::AddTask(void *pUser, TaskConsumHandle handle/* = NULL*/){
 	if(handle) tTaskInfo.fTaskHandle = handle;
 	else tTaskInfo.fTaskHandle = mComTaskHandle;
 	mTaskList.push_back(tTaskInfo);
+	mBusy = true;
 	//printf("New task come in, handle: %p, serve handle: %p, task count: %lu.\n", handle, tTaskInfo.fTaskHandle, mTaskList.size());
 }
 
@@ -100,12 +107,17 @@ bool CThdPool::GetNewTask(TaskInfo &task_info)
 	//printf("To get new task\n");
 	CLock lock(&mTaskListMutex);
 #ifdef TPDEBUG
-	printf("## Undo task size: %lu\n", mTaskList.size());
+	//printf("## Undo task size: %lu\n", mTaskList.size());
 #endif
 	if(mTaskList.size() > 0){
 		task_info = *mTaskList.begin();
 		mTaskList.pop_front();
 		ret = true;		
+		mBusy = true;
+		//static int n = 0;
+		//printf("Task: %d\n", ++n);
+	}else{
+		mBusy = false;
 	}
 	//printf("Get task: %d\n", ret);
 	return ret;
@@ -154,16 +166,18 @@ void CThdPool::DoTaskAllocate(){
 
 bool CThdPool::IsBusy()
 {
-	CLock lock(&mTaskListMutex);
-	if(mTaskList.size() > 0) return true;
-	else return false;
+	//CLock lock(&mTaskListMutex);
+	//if(mTaskList.size() > 0) return true;
+	//else return false;
+	return mBusy;
 }
 
 int CThdPool::LazyJoin()
 {
 	while(true){
-		CLock lock(&mTaskListMutex);
-		if(mTaskList.size() == 0) break;
+		if(mRunningThds == 0 && mTaskList.size() <= 0){
+			break;
+		}
 		usleep(500000);
 	}
 	return 0;

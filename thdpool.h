@@ -96,6 +96,9 @@ private:
 	TaskConsumHandle mComTaskHandle;
 
 	int mPoolSize;
+	bool mBusy;
+	int mRunningThds;
+	pthread_mutex_t mRunningThdsMutex;
 	vector<ThdInfo> mThdInfo;
 	pthread_mutex_t mThdInfoMutex;
 
@@ -106,6 +109,8 @@ private:
 	void CheckIdleThread(const TaskInfo &task_info);
 	void DoTask(int index);
 	void DoTaskAllocate();
+	void RunningThdCount();
+	void RunningThdRemove();
 
 public:
 	CThdPool();
