@@ -113,6 +113,7 @@ public:
 	int PoolInit(int pool_size, TaskConsumHandle handle = NULL);
 	int AddTask(void *pUser, TaskConsumHandle handle = NULL);
 	bool IsBusy();
+	int LazyJoin(); // Careful
 
 };
 

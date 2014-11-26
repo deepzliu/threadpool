@@ -158,3 +158,14 @@ bool CThdPool::IsBusy()
 	if(mTaskList.size() > 0) return true;
 	else return false;
 }
+
+int CThdPool::LazyJoin()
+{
+	while(true){
+		CLock lock(&mTaskListMutex);
+		if(mTaskList.size() == 0) break;
+		usleep(500000);
+	}
+	return 0;
+}
+
