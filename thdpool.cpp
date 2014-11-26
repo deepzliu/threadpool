@@ -154,6 +154,7 @@ void CThdPool::DoTaskAllocate(){
 
 bool CThdPool::IsBusy()
 {
+	CLock lock(&mTaskListMutex);
 	if(mTaskList.size() > 0) return true;
 	else return false;
 }
